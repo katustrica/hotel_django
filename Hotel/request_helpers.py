@@ -25,10 +25,15 @@ async def request(method, url, **kwargs):
 
     if kwargs.get('headers', None) is None:
         kwargs['headers'] = default_headers()
-
     if WebSession.session is None:
+        session = WebSession.create()
+    elif WebSession.session.closed:
         session = WebSession.create()
     else:
         session = WebSession.session
 
     return await session.request(method=method, url=url, **kwargs)
+
+async def close():
+    # run this before the app ends
+    await WebSession.close()

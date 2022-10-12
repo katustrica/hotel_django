@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from enum import IntEnum
 from Hotel.const import AlarmType
 
-from Hotel.request_helpers import request
+from Hotel.request_helpers import request, close
 import fdb
 from django.contrib.auth.models import User
 from django.db import models
@@ -46,8 +46,9 @@ class Booking(models.Model):
         asyncio.set_event_loop(loop)
         res = loop.run_until_complete(request('GET', url))
         json_res = loop.run_until_complete(res.json())
-
-        return cls.get_room_info_by_numbers(json_res.get('bookingNumbers', []))
+        res = cls.get_room_info_by_numbers(json_res.get('bookingNumbers', []))
+        loop.run_until_complete(close())
+        return res
 
 class EventBRS(models.Model):
     """ События из БРС """
