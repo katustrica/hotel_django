@@ -52,9 +52,12 @@ class Booking(models.Model):
 
 class EventBRS(models.Model):
     """ События из БРС """
-    sensor_id: models.IntegerField()
+    sensor_id = models.IntegerField()
     datetime = models.DateTimeField()
     type = models.IntegerField(choices=AlarmType.choices)
+
+    def __repr__(self):
+        return f'{self.sensor_id} - {self.datetime} - {"движение" if self.type == 32 else "покой"}'
 
     @classmethod
     def get_by_interval(cls, start_date: datetime, finish_date: datetime):
@@ -69,6 +72,7 @@ class EventBRS(models.Model):
         # Выполняем запрос
         cur.execute(f"""
             SELECT 
+                d.EVENTID,
                 d.MESSHIGH,
                 d.DTTM, 
                 d.MESSLOW
@@ -80,12 +84,11 @@ class EventBRS(models.Model):
                 and DTTM >= TIMESTAMP'{start_date:%Y-%m-%d %H:%M:%S}'
                 and DTTM <= TIMESTAMP'{finish_date:%Y-%m-%d %H:%M:%S}'
                 and (d.MESSLOW = 21 or d.MESSLOW = 32)
-            ORDER BY DTTM asc
         """)
 
         result = defaultdict(list)
-        for sensor_id, event_datetime, event_type in cur.fetchall():
-            result[sensor_id].append(EventBRS(sensor_id, event_datetime, event_type))
+        for event_id, sensor_id, event_datetime, event_type in cur.fetchall():
+            result[sensor_id].append(cls(sensor_id=sensor_id, datetime=event_datetime, type=event_type))
         return result
 
 
