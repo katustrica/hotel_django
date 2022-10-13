@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'Hotel.apps.HotelConfig',
-    # 'constance.backends.database',
+    'constance.backends.database',
     'constance',
 ]
 
