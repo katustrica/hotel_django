@@ -31,10 +31,10 @@ class Booking(models.Model):
             number = booking['number']
             room_stays = booking['roomStays'][0]
             room_id = room_stays['roomId']
-            start = room_stays['checkInDateTime'] or room_stays['actualCheckInDateTime']
-            finish = room_stays['checkOutDateTime'] or room_stays['actualCheckOutDateTime']
+            start = room_stays['actualCheckInDateTime'] or room_stays['checkInDateTime']
+            finish = room_stays['actualCheckOutDateTime'] or room_stays['checkOutDateTime']
             result[room_id].append(Booking(number=number, room_id=room_id, start=start, finish=finish))
-        return result
+        return dict(sorted(result.items()))
 
     @classmethod
     def get_by_interval(cls, start_date: datetime, finish_date: datetime):
