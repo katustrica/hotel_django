@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 from enum import IntEnum
 from django.db.models import IntegerChoices
 
+API_KEY_HEADER = {'X-API-KEY': 'f3d5fd72-747b-4f6d-904a-46188d0a9944'}
+BOOKINGS_URL = r'https://partner.tlintegration.com/api/webpms/v1/bookings'
 MESSHIGH_NAME_DICT = {
     1: '3-5',
     2: '2-5',
@@ -24,9 +26,6 @@ ROOM_ID_NAME_DICT = {
     # "4503599627437182": "2-7",
     # "4503599627437183": "3-7",
 }
-
-
-
 class AlarmType(IntegerChoices):
     """ Тип события """
     motion = 32  # Технологический (движение)

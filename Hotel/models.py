@@ -1,14 +1,12 @@
 import asyncio
 from collections import defaultdict
-from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import IntEnum
-from Hotel.const import AlarmType
+from Hotel.const import AlarmType, API_KEY_HEADER, BOOKINGS_URL
 
-from Hotel.request_helpers import request, close
 import fdb
 from django.contrib.auth.models import User
 from django.db import models
+from aiohttp import ClientSession
 
 
 class Booking(models.Model):
@@ -18,37 +16,47 @@ class Booking(models.Model):
     finish = models.DateTimeField()
 
     def __str__(self):
-        return str(self.number)
+        return f'№{self.number} room({self.room_id}) {self.start}-{self.finish}'
+
+    def __repr__(self):
+        return f'№{self.number} room({self.room_id}) {self.start}-{self.finish}'
+
 
     @classmethod
-    def get_room_info_by_numbers(cls, numbers: list[str]):
-        loop = asyncio.get_event_loop()
-        urls = (f'https://partner.tlintegration.com/api/webpms/v1/bookings/{number}' for number in numbers)
-        results = loop.run_until_complete(asyncio.gather(*[request('GET', url) for url in urls]))
-        booking_infos = loop.run_until_complete(asyncio.gather(*[res.json() for res in results]))
-        result = defaultdict(list)
-        for booking in booking_infos:
-            number = booking['number']
-            room_stays = booking['roomStays'][0]
-            room_id = room_stays['roomId']
-            start = room_stays['actualCheckInDateTime'] or room_stays['checkInDateTime']
-            finish = room_stays['actualCheckOutDateTime'] or room_stays['checkOutDateTime']
-            result[room_id].append(Booking(number=number, room_id=room_id, start=start, finish=finish))
-        return dict(sorted(result.items()))
+    async def get_by_interval(cls, start_date: datetime, finish_date: datetime):
+        booking_numbers = await cls._get_booking_numbers_by_interval(start_date, finish_date)
 
-    @classmethod
-    def get_by_interval(cls, start_date: datetime, finish_date: datetime):
-        url = (
-            r'https://partner.tlintegration.com/api/webpms/v1/bookings?affectsPeriodFrom='
-            f'{start_date:%Y-%m-%dT%H:%M}&affectsPeriodTo={finish_date:%Y-%m-%dT%H:%M}'
+        booking_infos = await asyncio.gather(
+            *(asyncio.create_task(cls._get_booking_by_number(number)) for number in booking_numbers)
         )
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        res = loop.run_until_complete(request('GET', url))
-        json_res = loop.run_until_complete(res.json())
-        res = cls.get_room_info_by_numbers(json_res.get('bookingNumbers', []))
-        loop.run_until_complete(close())
-        return res
+        booking_infos_dict = defaultdict(list)
+        for booking_info in booking_infos:
+            booking_infos_dict[booking_info.room_id].append(booking_info)
+        return booking_infos_dict
+
+    @classmethod
+    async def _get_booking_by_number(cls, booking_number):
+        async with ClientSession(headers=API_KEY_HEADER) as session:
+            url = f'{BOOKINGS_URL}/{booking_number}'
+            async with session.get(url=url) as response:
+                result = await response.json()
+                room_stays = result['roomStays'][0]
+                room_id = room_stays['roomId']
+                start = room_stays['actualCheckInDateTime'] or room_stays['checkInDateTime']
+                finish = room_stays['actualCheckOutDateTime'] or room_stays['checkOutDateTime']
+                return cls(number=result['number'], room_id=room_id, start=start, finish=finish)
+
+    @classmethod
+    async def _get_booking_numbers_by_interval(cls, start_date: datetime, finish_date: datetime):
+        async with ClientSession(headers=API_KEY_HEADER) as session:
+            params = {
+                'affectsPeriodFrom': f'{start_date:%Y-%m-%dT%H:%M}',
+                'affectsPeriodTo': f'{finish_date:%Y-%m-%dT%H:%M}',
+            }
+            async with session.get(url=BOOKINGS_URL, params=params) as response:
+                result = await response.json()
+                return result['bookingNumbers']
+
 
 class EventBRS(models.Model):
     """ События из БРС """
@@ -107,15 +115,23 @@ class ActiveIntervalsBRS(models.Model):
                 events = events[:-1]
 
             start_time, finish_time = None, None
+            event_count = len(events) - 1
             for start_event, finish_event in zip(events[::2], events[1::2]):
                 start_time = start_event.datetime if not start_time else start_time
                 finish_time = finish_event.datetime if not finish_time else finish_time
 
                 if start_event.datetime - finish_time < timedelta(minutes=5):
                     finish_time = finish_event.datetime
+                    if events.index(finish_event) == event_count:
+                        result[sensor_id].append(
+                            cls(sensor_id=sensor_id, start=start_time, finish=finish_time)
+                        )
                 else:
                     result[sensor_id].append(cls(sensor_id=sensor_id, start=start_time, finish=finish_time))
-                    result[sensor_id].append(cls(sensor_id=sensor_id, start=start_event.datetime, finish=finish_event.datetime))
                     start_time = start_event.datetime
                     finish_time = finish_event.datetime
+                    if events.index(finish_event) == event_count:
+                        result[sensor_id].append(
+                            cls(sensor_id=sensor_id, start=start_event.datetime, finish=finish_event.datetime)
+                        )
         return result

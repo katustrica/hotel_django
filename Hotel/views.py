@@ -1,13 +1,13 @@
-from django.shortcuts import render
+import asyncio
 
-from django.shortcuts import render
-from Hotel.models import EventBRS, ActiveIntervalsBRS, Booking
-from Hotel.const import ROOM_ID_NAME_DICT, MESSHIGH_NAME_DICT
 import pandas as pd
-from plotly.offline import plot
 import plotly.express as px
-from datetime import datetime
 from constance import config
+from django.shortcuts import render
+from plotly.offline import plot
+
+from Hotel.const import ROOM_ID_NAME_DICT, MESSHIGH_NAME_DICT
+from Hotel.models import EventBRS, ActiveIntervalsBRS, Booking
 
 
 def index(request):
@@ -16,7 +16,7 @@ def index(request):
 
     events_by_sensor_id = EventBRS.get_by_interval(start_date, finish_date)
     intervals_by_sensor_id = ActiveIntervalsBRS.get_sensor_id_intervals_by_events_dict(events_by_sensor_id)
-    bookings_by_room_number = Booking.get_by_interval(start_date, finish_date)
+    bookings_by_room_number = asyncio.run(Booking.get_by_interval(start_date, finish_date))
     plotly_tasks = []
     for bookings in bookings_by_room_number.values():
         for booking in bookings:
