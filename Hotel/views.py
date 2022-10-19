@@ -43,8 +43,8 @@ def index(request):
         'type': 'line', 'yref': 'paper', 'y0': 0, 'y1': 1, 'xref': 'x', 'x0': datetime.now(), 'x1': datetime.now()
     }])
     fig.update_layout({
-        'plot_bgcolor': '#FFF8E8',
-        'paper_bgcolor': '#FFFFF9',
+        'plot_bgcolor': '#ECE7DC',
+        # 'paper_bgcolor': '#FFFFF9',
     })
     fig.update_shapes(line_color="#990D35")
     gantt_plot = plot(fig, output_type="div")
