@@ -7,10 +7,10 @@ BOOKINGS_URL = r'https://partner.tlintegration.com/api/webpms/v1/bookings'
 MESSHIGH_NAME_DICT = {
     1: '3-5',
     2: '2-5',
-    3: '3-7',
-    4: '3-7',
-    5: '2-7',
-    6: '2-7',
+    3: '2-7',
+    4: '2-7',
+    5: '3-7',
+    6: '3-7',
     7: '1-1,2',
     8: '1-1,2',
 }
