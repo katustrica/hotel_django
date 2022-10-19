@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from plotly.offline import plot
 
-from Hotel.const import ROOM_ID_NAME_DICT, MESSHIGH_NAME_DICT
+from Hotel.const import ROOM_ID_NAME_DICT, MESSHIGH_NAME_DICT, ORDER_ROOM
 from Hotel.models import EventBRS, ActiveIntervalsBRS, Booking
 
 
@@ -40,7 +40,7 @@ def index(request):
                       y="Task",
                       color='Resource',
                       color_discrete_map=discrete_map_resource)
-    fig.update_yaxes(autorange="reversed")
+    fig.update_yaxes(categoryarray=ORDER_ROOM, categoryorder='array')
     now = timezone.localtime(timezone.now())
     fig.update_layout(shapes=[{'type': 'line', 'yref': 'paper', 'y0': 0, 'y1': 1, 'xref': 'x', 'x0': now, 'x1': now}])
     fig.update_layout({
