@@ -4,7 +4,7 @@ from django.db.models import IntegerChoices
 
 API_KEY_HEADER = {'X-API-KEY': 'f3d5fd72-747b-4f6d-904a-46188d0a9944'}
 BOOKINGS_URL = r'https://partner.tlintegration.com/api/webpms/v1/bookings'
-ORDER_ROOM = ['1-1,2', '2-3', '2-5', '2-7', '3-5', '3-6',  '3-7',]
+ORDER_ROOM = ['1-1,2', '2-2', '2-3', '2-4', '2-5', '2-7', '3-1', '3-2', '3-3', '3-5', '3-6', '3-7',]
 MESSHIGH_NAME_DICT = {
     1: '3-5',
     2: '2-5',
