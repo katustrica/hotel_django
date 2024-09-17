@@ -33,10 +33,10 @@ class GetIntervalsTestCase(TestCase):
         """ Тест номеров бронирований по интвервалу"""
         result = asyncio.run(Booking._get_booking_numbers_by_interval(start_date, finish_date))
         self.assertEqual(len(result), 28)
-        self.assertEqual(result[0], '20220930-16727-163995087')
-        self.assertEqual(result[-1], '20221002-16727-164695328')
+        self.assertEqual(result[0], '20221013-16727-159638571')
+        self.assertEqual(result[-1], '20221012-16727-166176815')
 
     def test_get_intervals(self):
         """ Тест получение интервалов """
-        events_by_sensor_id = EventBRS.get_by_interval(datetime(2022, 10, 12), datetime(2022, 10, 13))
+        events_by_sensor_id = EventBRS.get_by_interval(datetime(2024, 9, 16), datetime(2024, 9, 18))
         intervals_by_sensor_id = ActiveIntervalsBRS.get_sensor_id_intervals_by_events_dict(events_by_sensor_id)

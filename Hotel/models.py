@@ -44,7 +44,12 @@ class Booking(models.Model):
                 room_id = room_stays['roomId']
                 start = room_stays['actualCheckInDateTime'] or room_stays['checkInDateTime']
                 finish = room_stays['actualCheckOutDateTime'] or room_stays['checkOutDateTime']
-                return cls(number=result['number'], room_id=room_id, start=start, finish=finish)
+                return cls(
+                    number=result['number'],
+                    room_id=room_id,
+                    start=datetime.strptime(start, '%Y-%m-%dT%H:%M'),
+                    finish=datetime.strptime(finish, '%Y-%m-%dT%H:%M')
+                )
 
     @classmethod
     async def _get_booking_numbers_by_interval(cls, start_date: datetime, finish_date: datetime):
@@ -55,7 +60,7 @@ class Booking(models.Model):
             }
             async with session.get(url=BOOKINGS_URL, params=params) as response:
                 result = await response.json()
-                return result['bookingNumbers']
+                return result.get('bookingNumbers') or {}
 
 
 class EventBRS(models.Model):

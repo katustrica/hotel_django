@@ -129,6 +129,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 CONSTANCE_CONFIG = {
-    'START_TIME': (datetime(2022, 10, 7), 'Начальное время для графиков'),
-    'FINISH_TIME': (datetime(2022, 10, 13), 'Конечное время для графиков'),
+    'START_TIME': (datetime(2024, 9, 16), 'Начальное время для графиков'),
+    'FINISH_TIME': (datetime(2024, 9, 18), 'Конечное время для графиков'),
 }
